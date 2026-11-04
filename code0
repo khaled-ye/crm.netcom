@@ -1,0 +1,203 @@
+function getTodayFR() {
+  const d = new Date();
+  const day = String(d.getDate()).padStart(2, '0');
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const year = d.getFullYear();
+  return `${day}/${month}`;
+}
+const today = getTodayFR();
+
+function saveTableToLocalStorage() {
+  const table = document.getElementById("ctl00_ContentPlaceHolder2_GvTickets");
+  let data = [];
+  
+  for (let i = 1; i < table.rows.length; i++) {
+    let row = table.rows[i];
+    data.push({
+      col1: row.cells[0].innerText,
+    });
+  }  
+  localStorage.setItem("tableData", JSON.stringify(data));
+}
+
+function chargerTableau() {
+    let donneesStockees = localStorage.getItem("tableData");
+    if (donneesStockees) {
+        let data = JSON.parse(donneesStockees);
+        let result = data.map(elmt => elmt.col1);
+	return result;        
+    }
+}
+//localStorage.setItem('tableData', JSON.stringify([{col1:""}]));
+let dataCodeClient = chargerTableau();
+var khaled = document.getElementsByTagName('tr');
+
+if(khaled[0].querySelectorAll("b")[0].innerText.includes("VISUALISATION")){    
+    
+    window.scrollTo(0, document.body.scrollHeight);
+
+    var tableau = document.getElementById("ctl00_ContentPlaceHolder2_GvTickets");
+	tableau.style.borderCollapse = "separate";
+	
+    tableau.rows[0].style.backgroundColor = '#EB6200';
+
+    var balkis = tableau.rows[0].querySelectorAll("th");
+
+        balkis[15].classList.add('balkis');
+    
+    var joud = tableau.rows[0].querySelectorAll("a")
+
+    for(var j = 0 ; j < joud.length ; j++){
+        joud[j].style.color="white";
+        joud[j].style.fontFamily = 'Helvetica';
+        joud[j].style.fontSize = '12px';
+    }
+
+	
+	for (let i = 1; i < tableau.rows.length; i++) { 
+	let row = tableau.rows[i];
+
+    let codeClient = row.cells[0].innerText;
+    let ticketNbr = row.cells[2].innerText;	
+        
+        if (!dataCodeClient.includes(codeClient)) {
+            row.id = 'notExist';
+        }else if (row.cells[5].innerText.includes(today)) { 
+            row.id = 'toDay';
+        } else if (row.cells[5].innerText.toLowerCase().includes("inter")) { 
+            row.id = 'inter';
+        } else {
+            row.id = 'init';
+        }
+        
+        let hrefText = "DetailsTicket.aspx?userid=y.bady&ticketNbr=" + ticketNbr + "&codeclient=" + codeClient + "&typeTicket=SAV";
+        let hrefClient = "../pages/clientsView.aspx?userid=y.bady&codeclient="+codeClient;
+
+        row.cells[0].querySelectorAll("span")[0].addEventListener('click', () => {
+            window.open(hrefClient,"_blank");
+        });
+
+        row.cells[2].querySelectorAll("span")[0].addEventListener('click', () => {
+            window.open(hrefText,"_blank");
+        });
+        row.cells[2].querySelectorAll("span")[0].addEventListener("mouseover", () => {
+            row.cells[2].style.textDecoration = "underline";
+            row.cells[2].style.cursor = "pointer";  
+        });
+        row.cells[2].querySelectorAll("span")[0].addEventListener("mouseout", () => {
+            row.cells[2].style.textDecoration = "none";
+            row.cells[2].style.cursor = "auto";
+        });
+        row.cells[0].querySelectorAll("span")[0].addEventListener("mouseover", () => {
+            row.cells[0].style.textDecoration = "underline";
+            row.cells[0].style.cursor = "pointer";  
+        });
+        row.cells[0].querySelectorAll("span")[0].addEventListener("mouseout", () => {
+            row.cells[0].style.textDecoration = "none";
+            row.cells[0].style.cursor = "auto";
+        });    
+
+    }
+    
+	
+    saveTableToLocalStorage();
+    
+    for (let t = 0 ; t < tableau.rows.length ; t++) {
+        tableau.rows[t].deleteCell(16);
+        tableau.rows[t].deleteCell(15);
+        tableau.rows[t].deleteCell(10);
+        tableau.rows[t].deleteCell(9);
+        tableau.rows[t].deleteCell(8);
+        tableau.rows[t].deleteCell(7);
+        tableau.rows[t].deleteCell(6);
+    }
+
+
+    document.querySelectorAll('td').forEach(td => {
+        if (td.innerText.includes('mois') || td.innerText.includes('DATE') || td.innerText.includes('Fermer')) {
+            td.remove();
+        }
+    });
+
+    for (let i = 0; i < tableau.rows.length; i++) {
+	    let row = tableau.rows[i];
+	    Array.from(row.cells).map(cell => {
+          cell.style.borderRadius = "8px";
+          cell.style.border = "1px solid orange";
+        });
+	}
+
+    document.getElementsByClassName('col-md-12 card')[0].style.padding = '20px';
+    
+
+}else if(khaled[0].querySelectorAll("b")[0].innerText.includes("GESTION DES TICKETS TECHNIQUE")){
+    
+	
+	const divBoutons = document.createElement('div');
+	divBoutons.id = 'monConteneurFixe';
+	
+	
+    const btn1 = document.createElement("button");
+	btn1.textContent = "Webex";
+	btn1.id = 'btnOne';
+	btn1.onclick = () => window.open("https://admin.webex.com/login", "_blank");	
+
+    const btn2 = document.createElement("button");
+    btn2.textContent = "My Telephony";
+    btn2.id = 'btnTwo';
+	btn2.onclick = () => window.open("https://mytelephony.my-iptalk.com/login/#/", "_blank");
+
+    const btn3 = document.createElement("button");
+    btn3.textContent = "WebAdmin";
+    btn3.id = 'btnThree';
+	btn3.onclick = () => window.open("https://webadmin.my-iptalk.com/pages/common/login.jsp", "_blank");
+
+    const btn4 = document.createElement("button");
+	btn4.textContent = "ESAV TEST";
+	btn4.id = 'btnFour';
+	btn4.onclick = () => window.open("https://dro.orange-business.com/authentification?target=https://www.e-sav-test.operateurs.orange-business.com/ipsiteBench/login.do?codeContexte=ipsitebench", "_blank");
+
+    const btn5 = document.createElement("button");
+	btn5.textContent = "ESAV SIG";
+	btn5.id = 'btnFive';
+	btn5.onclick = () => window.open("https://dro.orange-business.com/authentification?target=https://www.e-sav-signalisation.operateurs.orange-business.com/ipsiteTT/login.do?codeContexte=ipsitett", "_blank");
+
+    const btn6 = document.createElement("button");
+	btn6.textContent = "DIAG SFR";
+	btn6.id = 'btnSix';
+	btn6.onclick = () => window.open("https://www.diag.sfr.net/index.php?task=auth", "_blank");
+
+    const btn7 = document.createElement("button");
+	btn7.textContent = "EXTRANET SFR";
+	btn7.id = 'btnSeven';
+	btn7.onclick = () => window.open("https://extranet.sfr.com/ope/ExtranetOperateur/home/OperateurLoginPage?1", "_blank");
+
+    const btn8 = document.createElement("button");
+	btn8.textContent = "KOSC";
+	btn8.id = 'btnEight';
+	btn8.onclick = () => window.open("https://extranet.kosc-telecom.fr/signin", "_blank");
+
+    const btn9 = document.createElement("button");
+	btn9.textContent = "ZABBIX";
+	btn9.id = 'btnNine';
+	btn9.onclick = () => window.open("https://supervision-cpe.netcom-group.fr/zabbix/index.php", "_blank");
+
+    const btn10 = document.createElement("button");
+	btn10.textContent = "OCOM";
+	btn10.id = 'btnTen';
+	btn10.onclick = () => window.open("https://100.100.16.161/me/#main", "_blank");    
+    
+    divBoutons.appendChild(btn1);
+    divBoutons.appendChild(btn2);
+    divBoutons.appendChild(btn3);
+    divBoutons.appendChild(btn4);
+    divBoutons.appendChild(btn5);
+    divBoutons.appendChild(btn6);
+    divBoutons.appendChild(btn7);
+    divBoutons.appendChild(btn8);
+    divBoutons.appendChild(btn9);
+    divBoutons.appendChild(btn10);
+
+    document.body.appendChild(divBoutons);
+
+}
