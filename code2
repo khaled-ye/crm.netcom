@@ -1,0 +1,168 @@
+// --- Fonctions utilitaires ---
+function getTodayFR() {
+  const d = new Date();
+  const day = String(d.getDate()).padStart(2, '0');
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  return `${day}/${month}`;
+}
+
+const today = getTodayFR();
+
+function saveTableToLocalStorage() {
+  const table = document.getElementById("ctl00_ContentPlaceHolder2_GvTickets");
+  if (!table) return;
+ 
+  let data = [];
+  for (let i = 1; i < table.rows.length; i++) {
+    data.push({ col1: table.rows[i].cells[0].innerText });
+  }
+  localStorage.setItem("tableData", JSON.stringify(data));
+}
+
+function chargerTableau() {
+  let donneesStockees = localStorage.getItem("tableData");
+  if (donneesStockees) {
+    try {
+      let data = JSON.parse(donneesStockees);
+      return data.map(elmt => elmt.col1);
+    } catch (e) {
+      return [];
+    }
+  }
+  return [];
+}
+
+let dataCodeClient = chargerTableau();
+const trElements = document.getElementsByTagName('tr');
+
+if (trElements.length > 0 && trElements[0].querySelectorAll("b")[0]?.innerText.includes("VISUALISATION")) {
+ 
+  window.scrollTo(0, document.body.scrollHeight);
+
+  const tableau = document.getElementById("ctl00_ContentPlaceHolder2_GvTickets");
+  if (tableau) {
+    tableau.style.borderCollapse = "separate";
+    tableau.rows[0].style.backgroundColor = '#EB6200';
+
+    // Styliser les liens de l'en-tête
+    const joud = tableau.rows[0].querySelectorAll("a");
+    joud.forEach(link => {
+      link.style.color = "white";
+      link.style.fontFamily = 'Helvetica';
+      link.style.fontSize = '12px';
+    });
+
+    // Traitement des lignes du tableau
+    for (let i = 1; i < tableau.rows.length; i++) {
+      let row = tableau.rows[i];
+      let codeClient = row.cells[0]?.innerText || "";
+      let ticketNbr = row.cells[2]?.innerText || "";
+      let textCol5 = row.cells[5]?.innerText.toLowerCase() || "";
+
+      if (!dataCodeClient.includes(codeClient)) {
+        row.id = 'notExist';
+      } else if (textCol5.includes(today)) {
+        row.id = 'toDay';
+      } else if (textCol5.includes("inter")) {
+        row.id = 'inter';
+      } else {
+        row.id = 'init';
+      }
+    }
+
+    // Gestion des clics et survols via la délégation d'événements (plus performant)
+    tableau.addEventListener('click', (e) => {
+      const cell = e.target.closest('td');
+      if (!cell) return;
+      const row = cell.parentElement;
+      const cellIndex = cell.cellIndex;
+ 
+      let codeClient = row.cells[0]?.innerText;
+      let ticketNbr = row.cells[2]?.innerText;
+
+      if (cellIndex === 0) {
+        window.open(`../pages/clientsView.aspx?userid=y.bady\\\&codeclient=${codeClient}`, "_blank");
+      } else if (cellIndex === 2) {
+        window.open(`DetailsTicket.aspx?userid=y.bady\\\&ticketNbr=${ticketNbr}\\\&codeclient=${codeClient}\\\&typeTicket=SAV`, "_blank");
+      }
+    });
+
+    tableau.addEventListener('mouseover', (e) => {
+      const cell = e.target.closest('td');
+      if (cell && (cell.cellIndex === 0 || cell.cellIndex === 2)) {
+        cell.style.textDecoration = "underline";
+        cell.style.cursor = "pointer";
+      }
+    });
+
+    tableau.addEventListener('mouseout', (e) => {
+      const cell = e.target.closest('td');
+      if (cell && (cell.cellIndex === 0 || cell.cellIndex === 2)) {
+        cell.style.textDecoration = "none";
+        cell.style.cursor = "auto";
+      }
+    });
+
+    saveTableToLocalStorage();
+
+    // Suppression des colonnes dans l'ordre décroissant pour éviter le décalage d'index
+    const colonnesASupprimer = [16, 15, 10, 9, 8, 7, 6];
+    for (let t = 0; t < tableau.rows.length; t++) {
+      colonnesASupprimer.forEach(colIndex => {
+        if (tableau.rows[t].cells.length > colIndex) {
+          tableau.rows[t].deleteCell(colIndex);
+        }
+      });
+    }
+
+    // Nettoyage des cellules contenant certains mots-clés
+    document.querySelectorAll('td').forEach(td => {
+      const text = td.innerText;
+      if (text.includes('mois') || text.includes('DATE') || text.includes('Fermer')) {
+        td.remove();
+      }
+    });
+
+    // Style des cellules
+    for (let i = 0; i < tableau.rows.length; i++) {
+      Array.from(tableau.rows[i].cells).forEach(cell => {
+        cell.style.borderRadius = "8px";
+        cell.style.border = "1px solid orange";
+      });
+    }
+  }
+
+  const card = document.getElementsByClassName('col-md-12 card')[0];
+  if (card) {
+    card.style.padding = '20px';
+  }
+
+} else if (trElements.length > 0 && trElements[0].querySelectorAll("b")[0]?.innerText.includes("GESTION DES TICKETS TECHNIQUE") || trElements.length > 0 && trElements[0].querySelectorAll("b")[0]?.innerText.includes("Gestion Prospects & Clients")) {
+ 
+  const divBoutons = document.createElement('div');
+  divBoutons.id = 'monConteneurFixe';
+
+  // Liste centralisée des boutons pour éviter la répétition
+  const boutonsConfig = [
+    { text: "Webex", id: "btnOne", url: "https://admin.webex.com/login" },
+    { text: "My Telephony", id: "btnTwo", url: "https://mytelephony.my-iptalk.com/login/#/" },
+    { text: "WebAdmin", id: "btnThree", url: "https://webadmin.my-iptalk.com/pages/common/login.jsp" },
+    { text: "ESAV TEST", id: "btnFour", url: "https://dro.orange-business.com/authentification?target=https://www.e-sav-test.operateurs.orange-business.com/ipsiteBench/login.do?codeContexte=ipsitebench" },
+    { text: "ESAV SIG", id: "btnFive", url: "https://dro.orange-business.com/authentification?target=https://www.e-sav-signalisation.operateurs.orange-business.com/ipsiteTT/login.do?codeContexte=ipsitett" },
+    { text: "DIAG SFR", id: "btnSix", url: "https://www.diag.sfr.net/index.php?task=auth" },
+    { text: "EXTRANET SFR", id: "btnSeven", url: "https://extranet.sfr.com/ope/ExtranetOperateur/home/OperateurLoginPage?1" },
+    { text: "KOSC", id: "btnEight", url: "https://extranet.kosc-telecom.fr/signin" },
+    { text: "ZABBIX", id: "btnNine", url: "https://supervision-cpe.netcom-group.fr/zabbix/index.php" },
+    { text: "OCOM", id: "btnTen", url: "https://100.100.16.161/me/#main" }
+  ];
+
+  boutonsConfig.forEach(config => {
+    const btn = document.createElement("button");
+    btn.textContent = config.text;
+    btn.id = config.id;
+    btn.onclick = () => window.open(config.url, "_blank");
+    divBoutons.appendChild(btn);
+  });
+
+  document.body.appendChild(divBoutons);
+}
