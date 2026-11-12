@@ -1,0 +1,189 @@
+function getTodayFR() {
+  const d = new Date();
+  const day = String(d.getDate()).padStart(2, '0');
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const year = d.getFullYear();
+  return `${day}/${month}`;
+}
+const today = getTodayFR();
+
+function saveTableToLocalStorage() {
+  const table = document.getElementById("ctl00_ContentPlaceHolder2_GvTickets");
+  let data = [];
+  
+  for (let i = 1; i < table.rows.length; i++) {
+    let row = table.rows[i];
+    data.push({
+      col1: row.cells[0].innerText,
+    });
+  }  
+  localStorage.setItem("tableData", JSON.stringify(data));
+}
+
+function chargerTableau() {
+    let donneesStockees = localStorage.getItem("tableData");
+    if (donneesStockees) {
+        let data = JSON.parse(donneesStockees);
+        let result = data.map(elmt => elmt.col1);
+	return result;        
+    }
+}
+
+let dataCodeClient = chargerTableau();
+var khaled = document.getElementsByTagName('tr');
+
+if(khaled[0].querySelectorAll("b")[0].innerText.includes("VISUALISATION")){    
+    
+    window.scrollTo(0, document.body.scrollHeight);
+
+    var tableau = document.getElementById("ctl00_ContentPlaceHolder2_GvTickets");
+	tableau.style.borderCollapse = "separate";
+	
+    tableau.rows[0].style.backgroundColor = '#EB6200';
+
+    var balkis = tableau.rows[0].querySelectorAll("th");
+
+        balkis[15].classList.add('balkis');
+    
+    var joud = tableau.rows[0].querySelectorAll("a")
+
+    for(var j = 0 ; j < joud.length ; j++){
+        joud[j].style.color="white";
+        joud[j].style.fontFamily = 'Helvetica';
+        joud[j].style.fontSize = '12px';
+    }
+
+	
+	for (let i = 1; i < tableau.rows.length; i++) { 
+	    let row = tableau.rows[i];
+	    let notes = row.querySelectorAll('span');
+	    
+        let codeClient = row.cells[0].innerText;
+        let ticketNbr = row.cells[2].innerText;	
+        
+        if (row.cells[14].querySelectorAll("input")[0].value != 0) {
+                row.id = 'init';
+                notes.forEach (note => note.id = 'raw-blink');
+            }else if (!dataCodeClient.includes(codeClient)) {
+                row.id = 'notExist';
+            }else if (row.cells[5].innerText.includes(today)) { 
+                row.id = 'toDay';
+            } else if (row.cells[5].innerText.toLowerCase().includes("inter")) { 
+                row.id = 'inter';
+            } else {
+                row.id = 'init';
+        };
+        
+        row.addEventListener('mouseover', (event) => {
+            
+            if (row) {
+                row.id = 'row-hover';
+            }
+        });
+        
+        row.addEventListener('mouseout', (event) => {
+            
+            if (row) {
+                if (row.cells[row.cells.length-1].querySelectorAll("input")[0].value != 0) {
+                    row.id = 'init';
+                    notes.forEach (note => note.id = 'raw-blink');
+                }else if (!dataCodeClient.includes(codeClient)) {
+                    row.id = 'notExist';
+                }else if (row.cells[5].innerText.includes(today)) { 
+                    row.id = 'toDay';
+                } else if (row.cells[5].innerText.toLowerCase().includes("inter")) { 
+                    row.id = 'inter';
+                }else {
+                    row.id = 'init';
+                };
+            }
+        });
+        
+        let hrefText = "DetailsTicket.aspx?userid=y.bady&ticketNbr=" + ticketNbr + "&codeclient=" + codeClient + "&typeTicket=SAV";
+        let hrefClient = "../pages/clientsView.aspx?userid=y.bady&codeclient="+codeClient;
+
+        row.cells[0].querySelectorAll("span")[0].addEventListener('click', () => {
+            window.open(hrefClient,"_blank");
+        });
+
+        row.cells[2].querySelectorAll("span")[0].addEventListener('click', () => {
+            window.open(hrefText,"_blank");
+        });
+        row.cells[2].querySelectorAll("span")[0].addEventListener("mouseover", () => {
+            row.cells[2].style.textDecoration = "underline";
+            row.cells[2].style.cursor = "pointer";  
+        });
+        row.cells[2].querySelectorAll("span")[0].addEventListener("mouseout", () => {
+            row.cells[2].style.textDecoration = "none";
+            row.cells[2].style.cursor = "auto";
+        });
+        row.cells[0].querySelectorAll("span")[0].addEventListener("mouseover", () => {
+            row.cells[0].style.textDecoration = "underline";
+            row.cells[0].style.cursor = "pointer";  
+        });
+        row.cells[0].querySelectorAll("span")[0].addEventListener("mouseout", () => {
+            row.cells[0].style.textDecoration = "none";
+            row.cells[0].style.cursor = "auto";
+        });    
+
+    }
+    
+    saveTableToLocalStorage();
+    
+    for (let t = 0 ; t < tableau.rows.length ; t++) {
+        tableau.rows[t].deleteCell(16);
+        tableau.rows[t].deleteCell(15);
+        tableau.rows[t].deleteCell(10);
+        tableau.rows[t].deleteCell(9);
+        tableau.rows[t].deleteCell(8);
+        tableau.rows[t].deleteCell(7);
+        tableau.rows[t].deleteCell(6);
+    }
+
+
+    document.querySelectorAll('td').forEach(td => {
+        if (td.innerText.includes('mois') || td.innerText.includes('DATE') || td.innerText.includes('Fermer')) {
+            td.remove();
+        }
+    });
+
+    for (let i = 0; i < tableau.rows.length; i++) {
+	    let row = tableau.rows[i];
+	    Array.from(row.cells).map(cell => {
+          cell.style.borderRadius = "8px";
+        });
+	}
+
+    document.getElementsByClassName('col-md-12 card')[0].style.padding = '20px';
+    
+
+}else if(document.getElementsByTagName('tr')[0].querySelectorAll("b")[0]?.innerText?.includes("GESTION DES TICKETS TECHNIQUE") || document.getElementsByTagName('tr')[0]?.innerText.includes("Société")){
+    
+  const divBoutons = document.createElement('div');
+  divBoutons.id = 'monConteneurFixe';
+
+  // Liste centralisée des boutons pour éviter la répétition
+  const boutonsConfig = [
+    { text: "Webex", id: "btnOne", url: "https://admin.webex.com/login" },
+    { text: "My Telephony", id: "btnTwo", url: "https://mytelephony.my-iptalk.com/login/#/" },
+    { text: "WebAdmin", id: "btnThree", url: "https://webadmin.my-iptalk.com/pages/common/login.jsp" },
+    { text: "ESAV TEST", id: "btnFour", url: "https://dro.orange-business.com/authentification?target=https://www.e-sav-test.operateurs.orange-business.com/ipsiteBench/login.do?codeContexte=ipsitebench" },
+    { text: "ESAV SIG", id: "btnFive", url: "https://dro.orange-business.com/authentification?target=https://www.e-sav-signalisation.operateurs.orange-business.com/ipsiteTT/login.do?codeContexte=ipsitett" },
+    { text: "DIAG SFR", id: "btnSix", url: "https://www.diag.sfr.net/index.php?task=auth" },
+    { text: "EXTRANET SFR", id: "btnSeven", url: "https://extranet.sfr.com/ope/ExtranetOperateur/home/OperateurLoginPage?1" },
+    { text: "KOSC", id: "btnEight", url: "https://extranet.covage.com/signin" },
+    { text: "ZABBIX", id: "btnNine", url: "https://supervision-cpe.netcom-group.fr/zabbix/index.php" },
+    { text: "OCOM", id: "btnTen", url: "https://100.100.16.161/me/#main" }
+  ];
+
+  boutonsConfig.forEach(config => {
+    const btn = document.createElement("button");
+    btn.textContent = config.text;
+    btn.id = config.id;
+    btn.onclick = () => window.open(config.url, "_blank");
+    divBoutons.appendChild(btn);
+  });
+
+  document.body.appendChild(divBoutons);
+
+}
